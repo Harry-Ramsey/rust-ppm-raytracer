@@ -2,10 +2,14 @@ pub mod vec3;
 pub mod colour;
 pub mod ray;
 pub mod camera;
+pub mod sphere;
+pub mod hittable;
 
+use crate::hittable::Hittable;
 use crate::vec3::Vec3;
 use crate::colour::Colour;
 use crate::camera::Camera;
+use crate::sphere::Sphere;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
@@ -20,6 +24,8 @@ fn main() {
         aspect_ratio,
     );
 
+    let sphere = Sphere { centre: Vec3 {x: 0.0, y: 0.0, z: -1.0}, radius: 0.5, colour: Colour::new(0.0, 0.0, 1.0) };
+
     println!("P3\n{} {}\n255", image_width, image_height);
 
     for x in (0..image_height).rev() {
@@ -30,11 +36,19 @@ fn main() {
 
             let ray = camera.get_ray(u, v);
             let unit_direction = ray.direction.unit_vector();
-            let t = 0.5 * (unit_direction.y + 1.0);
 
-            // A simple gradient from white to blue
-            let c_vec = Vec3 { x: 1.0, y: 1.0, z: 1.0 } * (1.0 - t) + Vec3 { x: 0.5, y: 0.7, z: 1.0 } * t;
-            let pixel_colour = Colour(c_vec);
+            let pixel_colour;
+            match sphere.hit(ray) {
+                Some(colour) => {
+                    pixel_colour = colour;
+                },
+                None => {
+                    let t = 0.5 * (unit_direction.y + 1.0);
+                    // A simple gradient from white to blue
+                    let c_vec = Vec3 { x: 1.0, y: 1.0, z: 1.0 } * (1.0 - t) + Vec3 { x: 0.5, y: 0.7, z: 1.0 } * t;
+                    pixel_colour = Colour(c_vec);
+                }
+            }
             println!("{}", pixel_colour);
         }
     }
